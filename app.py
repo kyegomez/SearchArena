@@ -79,7 +79,7 @@ if st.session_state['results_displayed']:
         if st.button("A is better 🥇"):
             display_feedback("You selected: A is better")
     with b_feedback_grid[0]:
-        if st.button("B is better 🥈"):
+        if st.button("B is better 💪"):
             display_feedback("You selected: B is better")
     with a_feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
