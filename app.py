@@ -28,7 +28,7 @@ if 'question' not in st.session_state:
     st.session_state['question'] = ""
 
 # Streamlit app layout
-st.title("Chatbot Comparison")
+st.title("Search Engine Agent Comparison")
 
 # Create columns for the input and model selection
 input_col, control_col = st.columns([4, 1])
