@@ -68,21 +68,21 @@ if st.session_state['results_displayed']:
     with col2:
         st.write("### Output B")
         st.write(st.session_state['answer_b'])
-    
-    feedback_col = st.columns([1, 1, 1, 1])
 
-    with feedback_col[0]:
+    feedback_grid = st.columns(2)
+
+    with feedback_grid[0]:
         if st.button("A is better 🥇"):
             st.write("You selected: A is better")
 
-    with feedback_col[1]:
+    with feedback_grid[1]:
         if st.button("B is better 🥈"):
             st.write("You selected: B is better")
 
-    with feedback_col[2]:
+    with feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
             st.write("You selected: It's a Tie")
 
-    with feedback_col[3]:
+    with feedback_grid[1]:
         if st.button("Both are bad 👎"):
             st.write("You selected: Both are bad")
