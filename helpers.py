@@ -1,88 +1,156 @@
-import streamlit as st
-import random
-from helpers import query_you_com, query_tavily, query_perplexity
+import requests
+from dotenv import load_dotenv
+import os
 
-# Set Streamlit to wide mode
-st.set_page_config(layout="wide")
+# Load environment variables from .env file
+load_dotenv()
 
-# Define the function to process the question
-def ProcessQuestion(question):
-    # Randomly select two out of the three functions
-    functions = [query_you_com, query_tavily, query_perplexity]
-    selected_functions = random.sample(functions, 2)
-    
-    # Get answers from the selected functions
-    answer_a = selected_functions[0](question)
-    answer_b = selected_functions[1](question)
-    
-    return answer_a, answer_b
+# Get API keys from environment variables
+YOU_COM_API_KEY = os.getenv('YOU_API_KEY')
+TAVILY_API_KEY = os.getenv('TAVILY_API_KEY')
+PERPLEXITY_API_KEY = os.getenv('PPLX_API_KEY')
+BRAVE_API_KEY = os.getenv('BRAVESEARCH_API_KEY')
 
-# Initialize session state if not already done
-if 'results_displayed' not in st.session_state:
-    st.session_state['results_displayed'] = False
-if 'answer_a' not in st.session_state:
-    st.session_state['answer_a'] = ""
-if 'answer_b' not in st.session_state:
-    st.session_state['answer_b'] = ""
-if 'question' not in st.session_state:
-    st.session_state['question'] = ""
+def query_you_com(query):
+    headers = {"X-API-Key": YOU_COM_API_KEY}
+    params = {"query": query}
+    try:
+        response = requests.get(
+            "https://api.ydc-index.io/rag",  # Verify the correctness of the API endpoint
+            params=params,
+            headers=headers,
+        )
+        response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
+        resp = response.json()
+        return resp['answer']
+    except requests.exceptions.HTTPError as http_err:
+        return f"HTTP error occurred: {http_err}"
+    except Exception as err:
+        return f"An error occurred: {err}"
 
-# Streamlit app layout
-st.title("Chatbot Comparison")
 
-# Create columns for the input and model selection
-input_col, control_col = st.columns([4, 1])
-
-with input_col:
-    # Text box for user input with character limit
-    question = st.text_area("Enter your question here (max 1000 characters):", max_chars=1000)
-
-with control_col:
-    # Submit button
-    submit_button = st.button("Submit")
-
-if submit_button:
-    if question:
-        if len(question) <= 1000:
-            # Process the question and get answers
-            answer_a, answer_b = ProcessQuestion(question)
-
-            # Save answers and state to session state
-            st.session_state['answer_a'] = answer_a
-            st.session_state['answer_b'] = answer_b
-            st.session_state['question'] = question
-            st.session_state['results_displayed'] = True
-        else:
-            st.error("Your question exceeds the 1,000 character limit. Please shorten your question.")
+def query_tavily(query):
+    payload = {
+        "api_key": TAVILY_API_KEY,
+        "query": query,
+        "search_depth": "basic",
+        "include_answer": True,
+        "include_images": False,
+        "include_raw_content": False,
+        "max_results": 1,
+        "include_domains": [],
+        "exclude_domains": []
+    }
+    response = requests.post("https://api.tavily.com/search", json=payload)
+    if response.status_code == 200:
+        resp = response.json()
+        return resp['answer']
     else:
-        st.error("Please enter a question.")
+        return f"Request failed with status code: {response.status_code}"
 
-# Display results if available in session state
-if st.session_state['results_displayed']:
-    col1, col2 = st.columns(2)
+def query_perplexity(query):
+    url = 'https://api.perplexity.ai/chat/completions'
+    headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {PERPLEXITY_API_KEY}'
+    }
+    data = {
+        "model": "llama-3-sonar-large-32k-online",
+        "stream": False,
+        "max_tokens": 1024,
+        "frequency_penalty": 1,
+        "temperature": 0.0,
+        "messages": [
+            {
+                "role": "system", 
+                "content": "Be precise and concise in your responses."
+            },
+            {
+                "role": "user",
+                "content": query
+            }
+        ]
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        result = response.json()
+        return result['choices'][0]['message']['content']
+    else:
+        return f"Request failed with status code: {response.status_code}"
 
-    with col1:
-        st.write("### Output A")
-        st.write(st.session_state['answer_a'])
-
-    with col2:
-        st.write("### Output B")
-        st.write(st.session_state['answer_b'])
+# def query_brave(query):
+#     headers = {"X-API-Key": BRAVE_API_KEY}
+#     params = {
+#         "q": query,
+#         "count": 1,
+#         "summary": True
+#     }
+#     response = requests.get("https://api.search.brave.com/res/v1/web/search", params=params, headers=headers)
+#     if response.status_code == 200:
+#         return response.json().get("summary", "No summary available.")
+#     else:
+#         return f"Request failed with status code: {response}"
     
-    feedback_col = st.columns([1, 1, 1, 1])
 
-    with feedback_col[0]:
-        if st.button("A is better 🥇"):
-            st.write("You selected: A is better")
+# def brave_search_summarization(query):
+#     # Endpoint for web search with summary
+#     web_search_url = "https://api.search.brave.com/res/v1/web/search"
+#     summarizer_url = "https://api.search.brave.com/res/v1/summarizer/search"
+    
+#     # Headers for the requests
+#     headers = {
+#         "Accept": "application/json",
+#         "Accept-Encoding": "gzip",
+#         "X-Subscription-Token": BRAVE_API_KEY
+#     }
+    
+#     # Parameters for the initial web search request
+#     web_search_params = {
+#         "q": query,
+#         "summary": 1
+#     }
+    
+#     # Make the initial request to the web search endpoint
+#     web_search_response = requests.get(web_search_url, headers=headers, params=web_search_params)
+    
+#     # Check if the request was successful
+#     if web_search_response.status_code != 200:
+#         raise Exception(f"Web search request failed with status code {web_search_response.status_code}")
+    
+#     web_search_data = web_search_response.json()
+    
+#     # Extract the summarizer key from the response
+#     summarizer_key = web_search_data.get('summarizer', {}).get('key')
+#     if not summarizer_key:
+#         raise Exception("No summarizer key found in the web search response")
+    
+#     # Parameters for the summarizer request
+#     summarizer_params = {
+#         "key": summarizer_key,
+#         "entity_info": 1
+#     }
+    
+#     # Make the request to the summarizer endpoint
+#     summarizer_response = requests.get(summarizer_url, headers=headers, params=summarizer_params)
+    
+#     # Check if the request was successful
+#     if summarizer_response.status_code != 200:
+#         raise Exception(f"Summarizer request failed with status code {summarizer_response.status_code}")
+    
+#     summarizer_data = summarizer_response.json()
+    
+#     # Return the summarized content
+#     return summarizer_data
 
-    with feedback_col[1]:
-        if st.button("B is better 🥈"):
-            st.write("You selected: B is better")
-
-    with feedback_col[2]:
-        if st.button("It's a Tie 🤝"):
-            st.write("You selected: It's a Tie")
-
-    with feedback_col[3]:
-        if st.button("Both are bad 👎"):
-            st.write("You selected: Both are bad")
+def ProcessQuestion(question, model):
+    if model == "You.com":
+        return query_you_com(question)
+    elif model == "Tavily.com":
+        return query_tavily(question)
+    elif model == "Perplexity.ai":
+        return query_perplexity(question)
+    elif model == "Brave.com":
+        return query_brave(question)
+    else:
+        return "Model not supported"
