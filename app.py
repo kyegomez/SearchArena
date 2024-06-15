@@ -71,18 +71,21 @@ if st.session_state['results_displayed']:
 
     feedback_grid = st.columns(2)
 
+    def display_feedback(message):
+        st.markdown(f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>', unsafe_allow_html=True)
+
     with feedback_grid[0]:
         if st.button("A is better 🥇"):
-            st.write("You selected: A is better")
+            display_feedback("You selected: A is better")
 
     with feedback_grid[1]:
         if st.button("B is better 🥈"):
-            st.write("You selected: B is better")
+            display_feedback("You selected: B is better")
 
     with feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
-            st.write("You selected: It's a Tie")
+            display_feedback("You selected: It's a Tie")
 
     with feedback_grid[1]:
         if st.button("Both are bad 👎"):
-            st.write("You selected: Both are bad")
+            display_feedback("You selected: Both are bad")
