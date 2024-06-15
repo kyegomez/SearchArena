@@ -28,7 +28,7 @@ if 'question' not in st.session_state:
     st.session_state['question'] = ""
 
 # Streamlit app layout
-st.title("Chatbot Comparison")
+st.title("Search Engine Agent Comparison")
 
 # Create columns for the input and model selection
 input_col, control_col = st.columns([4, 1])
@@ -60,29 +60,30 @@ if submit_button:
 # Display results if available in session state
 if st.session_state['results_displayed']:
     col1, col2 = st.columns(2)
-
     with col1:
         st.write("### Output A")
         st.write(st.session_state['answer_a'])
-
+        a_feedback_grid = st.columns(1)
     with col2:
         st.write("### Output B")
         st.write(st.session_state['answer_b'])
-    
-    feedback_col = st.columns([1, 1, 1, 1])
+        b_feedback_grid = st.columns(2)
 
-    with feedback_col[0]:
+    # Create a placeholder for the feedback div
+    feedback_placeholder = st.empty()
+
+    def display_feedback(message):
+        feedback_placeholder.markdown(f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>', unsafe_allow_html=True)
+
+    with a_feedback_grid[0]:
         if st.button("A is better 🥇"):
-            st.write("You selected: A is better")
-
-    with feedback_col[1]:
-        if st.button("B is better 🥈"):
-            st.write("You selected: B is better")
-
-    with feedback_col[2]:
+            display_feedback("You selected: A is better")
+    with b_feedback_grid[0]:
+        if st.button("B is better 💪"):
+            display_feedback("You selected: B is better")
+    with a_feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
-            st.write("You selected: It's a Tie")
-
-    with feedback_col[3]:
+            display_feedback("You selected: It's a Tie")
+    with b_feedback_grid[0]:
         if st.button("Both are bad 👎"):
-            st.write("You selected: Both are bad")
+            display_feedback("You selected: Both are bad")
