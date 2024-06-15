@@ -60,32 +60,30 @@ if submit_button:
 # Display results if available in session state
 if st.session_state['results_displayed']:
     col1, col2 = st.columns(2)
-
     with col1:
         st.write("### Output A")
         st.write(st.session_state['answer_a'])
-
+        a_feedback_grid = st.columns(1)
     with col2:
         st.write("### Output B")
         st.write(st.session_state['answer_b'])
+        b_feedback_grid = st.columns(2)
 
-    feedback_grid = st.columns(2)
+    # Create a placeholder for the feedback div
+    feedback_placeholder = st.empty()
 
     def display_feedback(message):
-        st.markdown(f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>', unsafe_allow_html=True)
+        feedback_placeholder.markdown(f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>', unsafe_allow_html=True)
 
-    with feedback_grid[0]:
+    with a_feedback_grid[0]:
         if st.button("A is better 🥇"):
             display_feedback("You selected: A is better")
-
-    with feedback_grid[1]:
+    with b_feedback_grid[0]:
         if st.button("B is better 🥈"):
             display_feedback("You selected: B is better")
-
-    with feedback_grid[0]:
+    with a_feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
             display_feedback("You selected: It's a Tie")
-
-    with feedback_grid[1]:
+    with b_feedback_grid[0]:
         if st.button("Both are bad 👎"):
             display_feedback("You selected: Both are bad")
